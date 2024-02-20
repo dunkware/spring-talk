@@ -1,2 +1,23 @@
-# spring-cluster
-Services built on top of spring boot for better / easier service integration and communication
+# DunkNet Cluster Messaing 
+
+Works on top of Kafka and Spring boot to easily create communication channels across spring boot micro services connected to a common cluster message bus. With Kafka / Spring Boot integration limitations and Kafka request / reply limitations + the missing feature of being able to create scoped channel conversations or contextual conversations between two nodes this code base was developed to build a easier, more powerful less bootstrapping micro service communication layer that can be extended and used with simple annotations. 
+
+# DunkNet Key Features/Concepts 
+### Easy POJO based message sending/receiving
+Any DunkNet node is able to send a POJO object as a message to the cluster or specific nodes and receiving nodes maintain a registry of message handlers based on scanning annotations on service components with @ADunkNetEventHandler that evaluates the method input parameter and if the class type is equal to the POJO message the event handler method is invoked.  This does require the consumer and producer services to have common POJO messages on their class path which is better than the alternative of restricting message communications as primitive types. 
+
+### Easy POJO based service provider/consumer
+Often times micro services want to expose services to a cluster, doing this over Kafka or HTTP is possible but to make rapid service development and consumption possible, DunkNet offers a method scoped annotation @ADunkNetServiceProvider that registers the method as cluster service defined by the Class type of the method single parameter POJO making it easier and less difficult to consume / provide services without having to use naming conventions. Cluster Nodes can simply Autowire DunkNet into their services and spring components and use it to invoke a service request that can be blocking or async by passing in a POJO instance of the service provider input class type. DunkNet will look for nodes that register the service based on POJO class type and once obtained the service input POJO is sent to the providing node and the service method is invoked and the POJO object the method returns is sent back to the service requester. This makes it possible to create a service in the cluster with a single annotation and consume that service with one line of code. 
+
+### Contextual Communication Channels 
+Often times there is a need for one node to communicate with another node around a specific context, where service provider and event handler annotations can be reused but within the context of a channel instance. To help explain the concept a stock market scanner service is provided by a node as a Channel, the channel method is annotated with @DunkNetChannelProvider and that method returns a ChannelHandler with life cycle methods as well as options to register additional instantiated classes specific for a stock market scanner which have service provider and event listener annotations parsed and added to the list of services / event handlers the channel provider maintains. The node requesting a market scanner would create an input POJO object that defines scanner criteria, call channelRequest method on DunkNet blocking or async and return a Channel on successful provider initialization. Here the channel consumer node can also add instantiated classes to provide services or receive channel scoped events and the outcome is logical communication channel using the single Kafka cluster node topic allowing the channel consumer to receive POJO scanner updates with @ADunkNetMessageHandler annotations, invoke a channel provider service that might update the scanner criteria and ultimately close the channel when the market scanner is no longer in use. 
+
+These types of contextual conversations work in many different use cases, it is a way of consuming/producing stateful based and long-lived services that involve conversational dialog scoped to the channel. In the front end of a system the user might create many market scanners with different criteria's in this example, without a market scanner channel the messaging infrastructure becomes more complex, harder to implement with having to create custom protocols, controllers and other parts to make it work where DunkNet channels handles this infrastructure out of the box with simple annotations. 
+
+### Channel Lifecyle Diagram 
+[Sonny and Mariel high fiving.](https://content.codecademy.com/courses/learn-cpp/community-challenge/highfive.gif)
+[enter link description here](https://photos.app.goo.gl/F3spKMQcH8QCsi876)
+# DunkNet  Annotations 
+### @ADunkNetService
+### @ADunkNetChannelProvider
+### @ADunkNetEventHandler 
